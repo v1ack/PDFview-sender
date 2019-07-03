@@ -1,0 +1,104 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:launchMode="singleInstance"
+    android:screenOrientation="portrait">
+
+    <Button
+        android:id="@+id/Send"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/choiceFile"
+        android:text="@string/send"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/connectButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/fileTransferProgressBar"
+        android:layout_centerHorizontal="true"
+        android:text="@string/seek_and_connect" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/Send"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/cancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancel"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/cancelAll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancelAll"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/fileTransferProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/linearLayout1"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/choiceFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="@string/choice_file"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/watchImage"
+        android:layout_width="match_parent"
+        android:layout_height="367dp"
+        app:srcCompat="@drawable/watch_img" />
+
+    <ImageView
+        android:id="@+id/disconnectedImg"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignEnd="@+id/watchImage"
+        android:layout_alignRight="@+id/watchImage"
+        android:layout_alignBottom="@+id/watchImage"
+        android:layout_marginRight="93dp"
+        android:layout_marginBottom="96dp"
+        android:visibility="visible"
+        app:srcCompat="@drawable/disconnected" />
+
+    <ImageView
+        android:id="@+id/connectedImg"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignEnd="@+id/watchImage"
+        android:layout_alignRight="@+id/watchImage"
+        android:layout_alignBottom="@+id/watchImage"
+        android:layout_marginRight="93dp"
+        android:layout_marginBottom="96dp"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/connected" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/watchImage"
+        android:gravity="center"
+        android:text="@string/how_to"
+        android:textSize="18sp" />
+
+</RelativeLayout>
