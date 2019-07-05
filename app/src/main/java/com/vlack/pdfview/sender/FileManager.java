@@ -13,13 +13,13 @@ import java.util.List;
 /**
  * Менеджер файлов
  */
-public class FileManager {
+class FileManager {
 
     private static final String TAG = "FileManager";
     private final File rootDirectory;
     private File currentDirectory;
 
-    public FileManager(Context context) {
+    FileManager(Context context) {
         File directory;
 
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -39,7 +39,7 @@ public class FileManager {
      * @param directory Директория
      * @return true если удалось, false при ошибке
      */
-    public boolean navigateTo(File directory) {
+    boolean navigateTo(File directory) {
         // Проверим, является ли файл директорией
         if (!directory.isDirectory()) {
             Log.e(TAG, directory.getAbsolutePath() + " is not a directory!");
@@ -63,14 +63,14 @@ public class FileManager {
     /**
      * Подняться на один уровень выше
      */
-    public boolean navigateUp() {
+    boolean navigateUp() {
         return navigateTo(currentDirectory.getParentFile());
     }
 
     /**
      * Получаем список файлов в текущей директории
      */
-    public List<File> getFiles() {
+    List<File> getFiles() {
         List<File> files = new ArrayList<>();
 
         files.addAll(Arrays.asList(currentDirectory.listFiles()));

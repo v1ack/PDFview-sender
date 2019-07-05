@@ -20,4 +20,9 @@
     <string name="ILLEGAL_ARGUMENT">Ошибка</string>
     <string name="onCancelAllCompletedNotFound">Ошибка, передачи не найдены</string>
     <string name="onCancelAllCompletedNotSupported">Ошибка, действие не поддерживается</string>
+    <string name="error">Ошибка</string>
+    <string name="transfer_completed">Передача завершена</string>
+    <string name="no_binding">Нет подключения к сервису</string>
+    <string name="not_bound">Сервис не подключен</string>
+    <string name="sending_file_toast">Отправка %1$s размером %2$s</string>
 </resources>

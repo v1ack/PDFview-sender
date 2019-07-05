@@ -5,10 +5,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,22 +31,21 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
     private static final String TAG = "FileTransferActivity";
     private static final int FILE_MANAGER_CODE = 1;
     private static final int CHANGE_STATE = 2;
-    private Button mBtnConn;
-    private Button mBtnCancel;
-    private Button mBtnCancelAll;
-    private Button mBtnChoice;
+    private Button mBtnConn, mBtnCancel, mBtnCancelAll, mBtnChoice;
     private ProgressBar mSentProgressBar;
     private ImageView mImgConnected;
-    private Context mCtxt;
+    private Context mContext;
     private long currentTransId;
-    private long mFileSize;
     private List<Long> mTransactions = new ArrayList<>();
+
+    private boolean mIsBound = false;
     private FileTransferSender mSenderService;
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.i(TAG, "Service disconnected");
             mSenderService = null;
+            mIsBound = false;
         }
 
         @Override
@@ -60,7 +59,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_sender_activity);
-        mCtxt = getApplicationContext();
+        mContext = getApplicationContext();
         mBtnConn = findViewById(R.id.connectButton);
         mBtnConn.setOnClickListener(this);
         mBtnCancel = findViewById(R.id.cancel);
@@ -71,19 +70,17 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         mBtnChoice.setOnClickListener(this);
         mImgConnected = findViewById(R.id.connectedImg);
         PendingIntent pi = createPendingResult(CHANGE_STATE, this.getIntent(), 0);
-        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferSender.class).putExtra(PARAM_PINTENT, pi),
+        mIsBound = bindService(new Intent(getApplicationContext(), FileTransferSender.class).putExtra(PARAM_PINTENT, pi),
                 this.mServiceConnection, Context.BIND_AUTO_CREATE);
         mSentProgressBar = findViewById(R.id.fileTransferProgressBar);
         mSentProgressBar.setMax(100);
     }
 
-    public void onDestroy() {
-        getApplicationContext().unbindService(mServiceConnection);
+    protected void onDestroy() {
+        if (mIsBound && mSenderService != null) {
+            unbindService(mServiceConnection);
+        }
         super.onDestroy();
-    }
-
-    public void onError(MediaRecorder mr, int what, int extra) {
-        Toast.makeText(mCtxt, " MAX SERVER DIED ", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -93,29 +90,29 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
 
     public void onClick(View v) {
         if (v.equals(mBtnCancel)) {
-            if (mSenderService != null) {
+            if (mIsBound) {
                 try {
                     mSenderService.cancelFileTransfer((int) currentTransId);
                     mTransactions.remove(currentTransId);
                 } catch (IllegalArgumentException e) {
                     e.printStackTrace();
-                    Toast.makeText(mCtxt, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(mCtxt, "no binding to service", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
             }
         } else if (v.equals(mBtnCancelAll)) {
             if (mSenderService != null) {
                 mSenderService.cancelAllTransactions();
                 mTransactions.clear();
             } else {
-                Toast.makeText(mCtxt, "no binding to service", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
             }
         } else if (v.equals(mBtnConn)) {
             if (mSenderService != null) {
                 mSenderService.connect();
             } else {
-                Toast.makeText(getApplicationContext(), "Service not Bound", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.not_bound, Toast.LENGTH_SHORT).show();
             }
         } else if (v.equals(mBtnChoice)) {
             Intent intent = new Intent(this, FilePickerActivity.class);
@@ -137,27 +134,24 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
             mBtnCancelAll.setVisibility(View.VISIBLE);
             mSentProgressBar.setVisibility(View.VISIBLE);
 
-            if (path.equals("null")) {
-                return;
-            }
             File file = new File(path);
-            mFileSize = file.length();
-            Toast.makeText(mCtxt, path + " selected " + " size " + mFileSize + " bytes", Toast.LENGTH_SHORT).show();
-            if (isSenderServiceBound()) {
+            String mFileSize = Formatter.formatShortFileSize(mContext, file.length());
+            Toast.makeText(mContext, getString(R.string.sending_file_toast, file.getName(), mFileSize), Toast.LENGTH_SHORT).show();
+            if (mIsBound) {
                 try {
                     int trId = mSenderService.sendFile(path);
                     mTransactions.add((long) trId);
                     currentTransId = trId;
                 } catch (IllegalArgumentException e) {
                     e.printStackTrace();
-                    Toast.makeText(mCtxt, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
                 }
             }
         } else if (requestCode == CHANGE_STATE) {
             if (resultCode == STATE_CONNECTED) {
                 mImgConnected.setVisibility(View.VISIBLE);
                 mBtnChoice.setVisibility(View.VISIBLE);
-            } else if (resultCode == STATE_DISCONNECTED){
+            } else if (resultCode == STATE_DISCONNECTED) {
                 mImgConnected.setVisibility(View.INVISIBLE);
                 mBtnChoice.setVisibility(View.INVISIBLE);
                 mBtnCancel.setVisibility(View.GONE);
@@ -176,7 +170,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mCtxt, "Error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, R.string.error, Toast.LENGTH_SHORT).show();
                         onActivityResult(CHANGE_STATE, STATE_DISCONNECTED, getIntent());
                     }
                 });
@@ -199,7 +193,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mCtxt, "Transfer Completed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, R.string.transfer_completed, Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -223,9 +217,5 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         } else {
             mImgConnected.setVisibility(View.INVISIBLE);
         }
-    }
-
-    private boolean isSenderServiceBound() {
-        return this.mSenderService != null;
     }
 }

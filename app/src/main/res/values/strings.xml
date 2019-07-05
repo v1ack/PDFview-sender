@@ -21,5 +21,10 @@
     <string name="NO_PEER_FOUND_ON_SEND">No Watch found yet. Please try again</string>
     <string name="choice_file">Choice file to send</string>
     <string name="how_to">Open PDFview app on your watch</string>
+    <string name="transfer_completed">Transfer Completed!</string>
+    <string name="error">Error</string>
+    <string name="no_binding">No binding to service</string>
+    <string name="not_bound">Service not Bound</string>
+    <string name="sending_file_toast">Sending file %1$s, size %2$s</string>
 
 </resources>

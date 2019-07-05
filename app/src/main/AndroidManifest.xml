@@ -18,7 +18,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.vlack.pdfview.sender.FileTransferSenderActivity"
-            android:label="@string/app_name"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -53,8 +53,5 @@
         <meta-data
             android:name="AccessoryServicesLocation"
             android:value="/res/xml/accessoryservices.xml" />
-        <meta-data
-            android:name="GearAppType"
-            android:value="wgt" />
     </application>
 </manifest>

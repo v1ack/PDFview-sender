@@ -24,7 +24,6 @@ public class FileTransferSender extends SAAgent {
     private int errCode = SAFileTransfer.ERROR_NONE;
     private SAPeerAgent mPeerAgent = null;
     private SAFileTransfer mSAFileTransfer = null;
-    private EventListener mCallback = null;
     private FileAction mFileAction = null;
 
     public FileTransferSender() {
@@ -35,7 +34,7 @@ public class FileTransferSender extends SAAgent {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "On Create of Sample FileTransferSender Service");
-        mCallback = new EventListener() {
+        EventListener mCallback = new EventListener() {
             @Override
             public void onProgressChanged(int transId, int progress) {
                 Log.d(TAG, "onProgressChanged : " + progress + " for transaction : " + transId);
@@ -118,7 +117,7 @@ public class FileTransferSender extends SAAgent {
             for (SAPeerAgent peerAgent : peerAgents)
                 mPeerAgent = peerAgent;
         } else {
-            Log.e(TAG, "No peer Aget found:" + result);
+            Log.e(TAG, "No peer Agent found:" + result);
             Toast.makeText(getBaseContext(), R.string.NO_AGENT_FOUND, Toast.LENGTH_SHORT).show();
             sendState(false);
         }
@@ -163,7 +162,6 @@ public class FileTransferSender extends SAAgent {
             requestServiceConnection(mPeerAgent);
         } else {
             super.findPeerAgents();
-            Toast.makeText(getBaseContext(), R.string.NO_PEER_AGENT_FOUND, Toast.LENGTH_SHORT).show();
             sendState(false);
         }
     }
@@ -218,8 +216,8 @@ public class FileTransferSender extends SAAgent {
         void onFileActionCancelAllComplete();
     }
 
-    public class SenderBinder extends Binder {
-        public FileTransferSender getService() {
+    class SenderBinder extends Binder {
+        FileTransferSender getService() {
             return FileTransferSender.this;
         }
     }

@@ -1,7 +1,10 @@
 package com.vlack.pdfview.sender;
 
+import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,22 +21,24 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
 
     private static final int TYPE_DIRECTORY = 0;
     private static final int TYPE_FILE = 1;
+    private Context mContext;
 
     @Nullable
     private OnFileClickListener onFileClickListener;
     private List<File> files = new ArrayList<>();
 
-    public void setOnFileClickListener(@Nullable OnFileClickListener onFileClickListener) {
+    void setOnFileClickListener(@Nullable OnFileClickListener onFileClickListener) {
         this.onFileClickListener = onFileClickListener;
     }
 
-    public void setFiles(List<File> files) {
+    void setFiles(List<File> files) {
         this.files = files;
     }
 
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
 
         View view;
@@ -48,10 +53,14 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         File file = files.get(position);
 
         holder.nameTv.setText(file.getName());
+        if (file.isFile()) {
+
+            holder.sizeTv.setText(Formatter.formatShortFileSize(mContext, file.length()));
+        }
         holder.itemView.setTag(file);
     }
 
@@ -85,11 +94,14 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
     class ViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView nameTv;
+        private final TextView sizeTv;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
+            mContext = itemView.getContext();
 
             nameTv = itemView.findViewById(R.id.name_tv);
+            sizeTv = itemView.findViewById(R.id.size_tv);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
