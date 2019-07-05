@@ -26,10 +26,10 @@
 <!ATTLIST serviceChannel reliability (ENABLE | DISABLE | enable | disable ) #REQUIRED>
 ]>
 <resources>
-    <application name="FileTransferSender">
+    <application name="PDFview">
         <serviceProfile
-            id="/sample/filetransfer"
-            name="FileTransferSender"
+            id="/pdfview/filetransfer"
+            name="PDFview"
             role="consumer"
             serviceImpl="com.vlack.pdfview.sender.FileTransferSender"
             version="1.0"

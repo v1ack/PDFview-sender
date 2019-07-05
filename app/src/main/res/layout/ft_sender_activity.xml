@@ -18,7 +18,7 @@
         android:id="@+id/connectButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/fileTransferProgressBar"
+        android:layout_above="@id/choiceFile"
         android:layout_centerHorizontal="true"
         android:text="@string/seek_and_connect" />
 
@@ -26,7 +26,7 @@
         android:id="@+id/linearLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/Send"
+        android:layout_above="@+id/connectButton"
         android:orientation="horizontal">
 
         <Button

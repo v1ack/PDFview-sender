@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PDFview Sender</string>
+    <string name="send">Отправить</string>
+    <string name="seek_and_connect">Подключиться к часам</string>
+    <string name="cancel">Отмена</string>
+    <string name="cancelAll">Отменить всё</string>
+    <string name="DEVICE_NOT_SUPPORTED">Устройство не поддерживается</string>
+    <string name="LIBRARY_NOT_INSTALLED">Приложение Samsung не установленно</string>
+    <string name="CONNECTION_OK">Часы подключены</string>
+    <string name="CONNECTION_ALREADY_EXIST">Часы подключены</string>
+    <string name="NO_AGENT_FOUND">Устройство не найдено</string>
+    <string name="choice_file">Выбрать файл</string>
+    <string name="how_to">Откройте PDFview на часах</string>
+    <string name="NO_PEER_FOUND_ON_SEND">Часы не найдены, попробуйте еще раз</string>
+    <string name="NO_PEER_AGENT_FOUND">Часы не найдены, попробуйте еще раз</string>
+    <string name="CONNECTION_NOT_MADE">Соединение не может быть установленно. Попробуйте еще раз</string>
+    <string name="UNKNOWN_ERROR">Соединение не установленно по неизвестной причине</string>
+    <string name="CANNOT_INIT">Соединение не установленно</string>
+    <string name="ILLEGAL_ARGUMENT">Ошибка</string>
+    <string name="onCancelAllCompletedNotFound">Ошибка, передачи не найдены</string>
+    <string name="onCancelAllCompletedNotSupported">Ошибка, действие не поддерживается</string>
+</resources>
