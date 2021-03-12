@@ -2,13 +2,11 @@ package com.vlack.pdfview.sender;
 
 import android.content.Context;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Менеджер файлов
@@ -70,11 +68,7 @@ class FileManager {
     /**
      * Получаем список файлов в текущей директории
      */
-    List<File> getFiles() {
-        List<File> files = new ArrayList<>();
-
-        files.addAll(Arrays.asList(currentDirectory.listFiles()));
-
-        return files;
+    File[] getFiles() {
+        return currentDirectory.listFiles();
     }
 }

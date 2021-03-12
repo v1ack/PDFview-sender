@@ -1,8 +1,13 @@
 package com.vlack.pdfview.sender;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -24,6 +29,7 @@ public class FileTransferSender extends SAAgent {
     private int errCode = SAFileTransfer.ERROR_NONE;
     private SAPeerAgent mPeerAgent = null;
     private SAFileTransfer mSAFileTransfer = null;
+    private EventListener mCallback = null;
     private FileAction mFileAction = null;
 
     public FileTransferSender() {
@@ -34,7 +40,10 @@ public class FileTransferSender extends SAAgent {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "On Create of Sample FileTransferSender Service");
-        EventListener mCallback = new EventListener() {
+
+        startRunningInForeground();
+
+        mCallback = new EventListener() {
             @Override
             public void onProgressChanged(int transId, int progress) {
                 Log.d(TAG, "onProgressChanged : " + progress + " for transaction : " + transId);
@@ -107,6 +116,10 @@ public class FileTransferSender extends SAAgent {
         } catch (RuntimeException e) {
             Log.e(TAG, e.getMessage());
         }
+
+        /** Example codes for Android O OS (stopForeground) **/
+        stopRunningInForeground();
+
         super.onDestroy();
         Log.i(TAG, "FileTransferSender Service is Stopped.");
     }
@@ -116,6 +129,8 @@ public class FileTransferSender extends SAAgent {
         if (peerAgents != null) {
             for (SAPeerAgent peerAgent : peerAgents)
                 mPeerAgent = peerAgent;
+
+            requestServiceConnection(mPeerAgent);
         } else {
             Log.e(TAG, "No peer Agent found:" + result);
             Toast.makeText(getBaseContext(), R.string.NO_AGENT_FOUND, Toast.LENGTH_SHORT).show();
@@ -154,6 +169,35 @@ public class FileTransferSender extends SAAgent {
         } else {
             Toast.makeText(getBaseContext(), R.string.CONNECTION_OK, Toast.LENGTH_SHORT).show();
             sendState(true);
+        }
+    }
+
+    public void startRunningInForeground() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationManager notificationManager = null;
+            String channel_id = "sample_channel_01";
+
+            if (notificationManager == null) {
+                String channel_name = "Accessory_SDK_Sample";
+                notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                NotificationChannel notiChannel = new NotificationChannel(channel_id, channel_name, NotificationManager.IMPORTANCE_LOW);
+                notificationManager.createNotificationChannel(notiChannel);
+            }
+
+            int notifyID = 1;
+            Notification notification = new Notification.Builder(this.getBaseContext(), channel_id)
+                    .setContentTitle(TAG)
+                    .setContentText("")
+                    .setChannelId(channel_id)
+                    .build();
+
+            startForeground(notifyID, notification);
+        }
+    }
+
+    public void stopRunningInForeground() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            stopForeground(true);
         }
     }
 
@@ -216,8 +260,8 @@ public class FileTransferSender extends SAAgent {
         void onFileActionCancelAllComplete();
     }
 
-    class SenderBinder extends Binder {
-        FileTransferSender getService() {
+    public class SenderBinder extends Binder {
+        public FileTransferSender getService() {
             return FileTransferSender.this;
         }
     }

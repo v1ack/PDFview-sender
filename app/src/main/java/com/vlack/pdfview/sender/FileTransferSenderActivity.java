@@ -1,13 +1,16 @@
 package com.vlack.pdfview.sender;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -17,8 +20,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.vlack.pdfview.sender.FileTransferSender.FileAction;
-import com.vlack.pdfview.sender.FileTransferSender.SenderBinder;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,23 +38,23 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
     private ImageView mImgConnected;
     private Context mContext;
     private long currentTransId;
-    private List<Long> mTransactions = new ArrayList<>();
+    private List<Long> mTransactions = new ArrayList<Long>();
 
     private boolean mIsBound = false;
-    private FileTransferSender mSenderService;
+    private FileTransferSender mFTSender;
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
-        public void onServiceDisconnected(ComponentName name) {
+        public void onServiceDisconnected(ComponentName className) {
             Log.i(TAG, "Service disconnected");
-            mSenderService = null;
+            mFTSender = null;
             mIsBound = false;
         }
 
         @Override
-        public void onServiceConnected(ComponentName arg0, IBinder binder) {
+        public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d(TAG, "Service connected");
-            mSenderService = ((SenderBinder) binder).getService();
-            mSenderService.registerFileAction(getFileAction());
+            mFTSender = ((FileTransferSender.SenderBinder) service).getService();
+            mFTSender.registerFileAction(getFileAction());
         }
     };
 
@@ -69,17 +71,20 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         mBtnChoice = findViewById(R.id.choiceFile);
         mBtnChoice.setOnClickListener(this);
         mImgConnected = findViewById(R.id.connectedImg);
-        PendingIntent pi = createPendingResult(CHANGE_STATE, this.getIntent(), 0);
-        mIsBound = bindService(new Intent(getApplicationContext(), FileTransferSender.class).putExtra(PARAM_PINTENT, pi),
-                this.mServiceConnection, Context.BIND_AUTO_CREATE);
         mSentProgressBar = findViewById(R.id.fileTransferProgressBar);
         mSentProgressBar.setMax(100);
+
+        initializeFT();
+
+        // set permission of storage
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        }
     }
 
     protected void onDestroy() {
-        if (mIsBound && mSenderService != null) {
-            unbindService(mServiceConnection);
-        }
+        destroyFT();
         super.onDestroy();
     }
 
@@ -92,7 +97,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         if (v.equals(mBtnCancel)) {
             if (mIsBound) {
                 try {
-                    mSenderService.cancelFileTransfer((int) currentTransId);
+                    mFTSender.cancelFileTransfer((int) currentTransId);
                     mTransactions.remove(currentTransId);
                 } catch (IllegalArgumentException e) {
                     e.printStackTrace();
@@ -102,15 +107,15 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                 Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
             }
         } else if (v.equals(mBtnCancelAll)) {
-            if (mSenderService != null) {
-                mSenderService.cancelAllTransactions();
+            if (mFTSender != null) {
+                mFTSender.cancelAllTransactions();
                 mTransactions.clear();
             } else {
                 Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
             }
         } else if (v.equals(mBtnConn)) {
-            if (mSenderService != null) {
-                mSenderService.connect();
+            if (mFTSender != null) {
+                mFTSender.connect();
             } else {
                 Toast.makeText(getApplicationContext(), R.string.not_bound, Toast.LENGTH_SHORT).show();
             }
@@ -122,6 +127,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (data == null) {
             return;
         }
@@ -139,7 +145,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
             Toast.makeText(mContext, getString(R.string.sending_file_toast, file.getName(), mFileSize), Toast.LENGTH_SHORT).show();
             if (mIsBound) {
                 try {
-                    int trId = mSenderService.sendFile(path);
+                    int trId = mFTSender.sendFile(path);
                     mTransactions.add((long) trId);
                     currentTransId = trId;
                 } catch (IllegalArgumentException e) {
@@ -161,8 +167,8 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         }
     }
 
-    private FileAction getFileAction() {
-        return new FileAction() {
+    private FileTransferSender.FileAction getFileAction() {
+        return new FileTransferSender.FileAction() {
             @Override
             public void onFileActionError() {
                 runOnUiThread(new Runnable() {
@@ -170,7 +176,8 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mContext, R.string.error, Toast.LENGTH_SHORT).show();
+                        currentTransId = -1;
+                        Toast.makeText(getApplicationContext(), R.string.error, Toast.LENGTH_SHORT).show();
                         onActivityResult(CHANGE_STATE, STATE_DISCONNECTED, getIntent());
                     }
                 });
@@ -193,7 +200,8 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
-                        Toast.makeText(mContext, R.string.transfer_completed, Toast.LENGTH_SHORT).show();
+                        currentTransId = -1;
+                        Toast.makeText(getApplicationContext(), "Transfer Completed!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -205,6 +213,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                     public void run() {
                         mSentProgressBar.setProgress(0);
                         mTransactions.remove(currentTransId);
+                        currentTransId = -1;
                     }
                 });
             }
@@ -216,6 +225,31 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
             mImgConnected.setVisibility(View.VISIBLE);
         } else {
             mImgConnected.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private void initializeFT() {
+        currentTransId = -1;
+
+        mSentProgressBar = (ProgressBar) findViewById(R.id.fileTransferProgressBar);
+        mSentProgressBar.setMax(100);
+
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(getApplicationContext(), " No SDCARD Present", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+        PendingIntent pi = createPendingResult(CHANGE_STATE, this.getIntent(), 0);
+        mIsBound = bindService(new Intent(getApplicationContext(), FileTransferSender.class).putExtra(PARAM_PINTENT, pi),
+                this.mServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void destroyFT() {
+        currentTransId = -1;
+
+        if (mIsBound && mFTSender != null) {
+            mFTSender.stopRunningInForeground();
+            unbindService(mServiceConnection);
         }
     }
 }
