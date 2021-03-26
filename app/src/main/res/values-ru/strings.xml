@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PDFview Sender</string>
     <string name="send">Отправить</string>
     <string name="seek_and_connect">Подключиться к часам</string>
     <string name="cancel">Отмена</string>

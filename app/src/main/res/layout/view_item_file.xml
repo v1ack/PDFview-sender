@@ -15,7 +15,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:adjustViewBounds="true"
-        android:src="@drawable/ic_file_92dp" />
+        android:src="@drawable/ic_pdf_92dp" />
 
     <TextView
         android:id="@+id/name_tv"

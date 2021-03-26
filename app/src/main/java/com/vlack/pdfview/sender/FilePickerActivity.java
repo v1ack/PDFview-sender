@@ -5,22 +5,22 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -31,6 +31,7 @@ public class FilePickerActivity extends AppCompatActivity {
     public static final String EXTRA_FILE_PATH = "file_path";
     private static final String TAG = "FilePickerActivity";
     private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final HashSet<String> ALLOWED_FILES = new HashSet<>(Arrays.asList("pdf", "txt", "md"));
 
     private FileManager fileManager;
 
@@ -126,7 +127,7 @@ public class FilePickerActivity extends AppCompatActivity {
      * Запрашиваем разрешение
      */
     private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     PERMISSION_REQUEST_CODE
@@ -147,9 +148,9 @@ public class FilePickerActivity extends AppCompatActivity {
         List<File> filtered_files = new ArrayList<>();
         for (File file : files) {
             String[] filename = file.getName().split("[.]");
-            if (filename[filename.length - 1].toLowerCase().equals("pdf") || file.isDirectory()) {
+            String extension = filename[filename.length - 1].toLowerCase();
+            if (ALLOWED_FILES.contains(extension) || file.isDirectory())
                 filtered_files.add(file);
-            }
         }
         Collections.sort(filtered_files, new Comparator<File>() {
             @Override
@@ -165,16 +166,16 @@ public class FilePickerActivity extends AppCompatActivity {
      * Инициализируем менеджер файлов, проверяем разрешение
      */
     private void initFileManager() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
-
-            }
-            // Разрешение предоставлено
-            fileManager = new FileManager(this);
-            updateFileList();
-        } else {
-            requestPermissions();
-        }
+//        if (ContextCompat.checkSelfPermission(this,
+//                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+//
+//            }
+//            // Разрешение предоставлено
+//        } else {
+//            requestPermissions();
+//        }
+        fileManager = new FileManager(this);
+        updateFileList();
     }
 }

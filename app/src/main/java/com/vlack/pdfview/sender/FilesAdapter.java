@@ -5,6 +5,7 @@ import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,6 +23,8 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
 
     private static final int TYPE_DIRECTORY = 0;
     private static final int TYPE_FILE = 1;
+    private static final int TYPE_MD = 2;
+    private static final int TYPE_TXT = 3;
     private Context mContext;
 
     @Nullable
@@ -44,11 +47,32 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
 
         View view;
 
+
         if (viewType == TYPE_DIRECTORY) {
             view = layoutInflater.inflate(R.layout.view_item_directory, parent, false);
         } else {
             view = layoutInflater.inflate(R.layout.view_item_file, parent, false);
+            ImageView image = view.findViewById(R.id.icon_iv);
+            switch (viewType) {
+                case TYPE_FILE: {
+                    image.setImageResource(R.drawable.ic_pdf_92dp);
+                    break;
+                }
+                case TYPE_MD: {
+                    image.setImageResource(R.drawable.ic_md_92dp);
+                    break;
+                }
+                case TYPE_TXT: {
+                    image.setImageResource(R.drawable.ic_txt_92dp);
+                    break;
+                }
+                default: {
+                    image.setImageResource(R.drawable.ic_pdf_92dp);
+                    break;
+                }
+            }
         }
+
 
         return new ViewHolder(view);
     }
@@ -74,11 +98,25 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
     @Override
     public int getItemViewType(int position) {
         File file = files.get(position);
+        String[] filename = file.getPath().split("\\.");
+        String extension = filename[filename.length - 1].toLowerCase();
 
         if (file.isDirectory()) {
             return TYPE_DIRECTORY;
         } else {
-            return TYPE_FILE;
+            switch (extension) {
+                case "pdf": {
+                    return TYPE_FILE;
+                }
+                case "md": {
+                    return TYPE_MD;
+                }
+                case "txt": {
+                    return TYPE_TXT;
+                }
+                default:
+                    return TYPE_FILE;
+            }
         }
     }
 

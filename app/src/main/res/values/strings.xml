@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">PDFview Sender</string>
+    <string name="app_name" translatable="false">Docs View Sender</string>
     <string name="send">Send</string>
     <string name="seek_and_connect">Connect to watch</string>
     <string name="cancel">Cancel</string>
