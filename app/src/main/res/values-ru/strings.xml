@@ -10,7 +10,7 @@
     <string name="CONNECTION_ALREADY_EXIST">Часы подключены</string>
     <string name="NO_AGENT_FOUND">Устройство не найдено</string>
     <string name="choice_file">Выбрать файл</string>
-    <string name="how_to">Откройте PDFview на часах</string>
+    <string name="how_to">Откройте Docs View или PDFview на часах</string>
     <string name="NO_PEER_FOUND_ON_SEND">Часы не найдены, попробуйте еще раз</string>
     <string name="NO_PEER_AGENT_FOUND">Часы не найдены, попробуйте еще раз</string>
     <string name="CONNECTION_NOT_MADE">Соединение не может быть установленно. Попробуйте еще раз</string>
@@ -24,4 +24,6 @@
     <string name="no_binding">Нет подключения к сервису</string>
     <string name="not_bound">Сервис не подключен</string>
     <string name="sending_file_toast">Отправка %1$s размером %2$s</string>
+    <string name="transfer_complete">Отправка завершена!</string>
+    <string name="sending_cancelled">Отправка отменена</string>
 </resources>

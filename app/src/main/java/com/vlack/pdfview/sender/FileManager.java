@@ -7,12 +7,12 @@ import android.util.Log;
 import androidx.core.content.ContextCompat;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * Менеджер файлов
  */
 class FileManager {
-
     private static final String TAG = "FileManager";
     private final File rootDirectory;
     private File currentDirectory;
@@ -28,6 +28,7 @@ class FileManager {
 
         rootDirectory = directory;
 
+        assert directory != null;
         navigateTo(directory);
     }
 
@@ -62,7 +63,7 @@ class FileManager {
      * Подняться на один уровень выше
      */
     boolean navigateUp() {
-        return navigateTo(currentDirectory.getParentFile());
+        return navigateTo(Objects.requireNonNull(currentDirectory.getParentFile()));
     }
 
     /**

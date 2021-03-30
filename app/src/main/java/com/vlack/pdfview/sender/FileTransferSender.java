@@ -57,10 +57,16 @@ public class FileTransferSender extends SAAgent {
                 errCode = errorCode;
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
                         + errorCode);
-                if (errorCode == SAFileTransfer.ERROR_NONE) {
-                    mFileAction.onFileActionTransferComplete();
-                } else {
-                    mFileAction.onFileActionError();
+                switch (errorCode) {
+                    case SAFileTransfer.ERROR_NONE:
+                        mFileAction.onFileActionTransferComplete();
+                        break;
+                    case SAFileTransfer.ERROR_PEER_AGENT_REJECTED:
+                        mFileAction.onFileActionCancel();
+                        break;
+                    default:
+                        mFileAction.onFileActionError();
+                        break;
                 }
             }
 
@@ -117,7 +123,7 @@ public class FileTransferSender extends SAAgent {
             Log.e(TAG, e.getMessage());
         }
 
-        /** Example codes for Android O OS (stopForeground) **/
+        // Example codes for Android O OS (stopForeground)
         stopRunningInForeground();
 
         super.onDestroy();
@@ -174,15 +180,12 @@ public class FileTransferSender extends SAAgent {
 
     public void startRunningInForeground() {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationManager notificationManager = null;
             String channel_id = "sample_channel_01";
 
-            if (notificationManager == null) {
-                String channel_name = "Accessory_SDK_Sample";
-                notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                NotificationChannel notiChannel = new NotificationChannel(channel_id, channel_name, NotificationManager.IMPORTANCE_LOW);
-                notificationManager.createNotificationChannel(notiChannel);
-            }
+            String channel_name = "Accessory_SDK_Sample";
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationChannel notiChannel = new NotificationChannel(channel_id, channel_name, NotificationManager.IMPORTANCE_LOW);
+            notificationManager.createNotificationChannel(notiChannel);
 
             int notifyID = 1;
             Notification notification = new Notification.Builder(this.getBaseContext(), channel_id)
@@ -252,6 +255,8 @@ public class FileTransferSender extends SAAgent {
 
     public interface FileAction {
         void onFileActionError();
+
+        void onFileActionCancel();
 
         void onFileActionProgress(long progress);
 

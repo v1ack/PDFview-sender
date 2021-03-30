@@ -54,20 +54,16 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.ViewHolder> 
             view = layoutInflater.inflate(R.layout.view_item_file, parent, false);
             ImageView image = view.findViewById(R.id.icon_iv);
             switch (viewType) {
-                case TYPE_FILE: {
-                    image.setImageResource(R.drawable.ic_pdf_92dp);
-                    break;
-                }
                 case TYPE_MD: {
-                    image.setImageResource(R.drawable.ic_md_92dp);
+                    image.setImageResource(R.drawable.ic_file_md);
                     break;
                 }
                 case TYPE_TXT: {
-                    image.setImageResource(R.drawable.ic_txt_92dp);
+                    image.setImageResource(R.drawable.ic_file_txt);
                     break;
                 }
                 default: {
-                    image.setImageResource(R.drawable.ic_pdf_92dp);
+                    image.setImageResource(R.drawable.ic_file_pdf);
                     break;
                 }
             }

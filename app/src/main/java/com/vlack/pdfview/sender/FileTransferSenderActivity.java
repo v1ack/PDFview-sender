@@ -28,22 +28,20 @@ import com.github.javiersantos.appupdater.AppUpdater;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FileTransferSenderActivity extends AppCompatActivity implements OnClickListener {
-    public static final int STATE_CONNECTED = 3;
-    public static final int STATE_DISCONNECTED = 4;
-    public static final String PARAM_PINTENT = "pendingIntent";
-    private static final String TAG = "FileTransferActivity";
     private static final int FILE_MANAGER_CODE = 1;
     private static final int CHANGE_STATE = 2;
-    private Button mBtnConn, mBtnCancel, mBtnCancelAll, mBtnChoice;
-    private ProgressBar mSentProgressBar;
-    private ImageView mImgConnected;
+    public static final int STATE_CONNECTED = 3;
+    public static final int STATE_DISCONNECTED = 4;
+    public static final int STATE_CONNECTED_SENDING = 5;
+    public static final String PARAM_PINTENT = "pendingIntent";
+    private static final String TAG = "FileTransferActivity";
+    private Button buttonConnect, buttonCancel, buttonChooseFile;
+    private ProgressBar sentProgressBar;
+    private ImageView imageConnection;
     private Context mContext;
     private long currentTransId;
-    private final List<Long> mTransactions = new ArrayList<Long>();
 
     private boolean mIsBound = false;
     private FileTransferSender mFTSender;
@@ -75,17 +73,15 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
         appUpdater.start();
 
         mContext = getApplicationContext();
-        mBtnConn = findViewById(R.id.connectButton);
-        mBtnConn.setOnClickListener(this);
-        mBtnCancel = findViewById(R.id.cancel);
-        mBtnCancel.setOnClickListener(this);
-        mBtnCancelAll = findViewById(R.id.cancelAll);
-        mBtnCancelAll.setOnClickListener(this);
-        mBtnChoice = findViewById(R.id.choiceFile);
-        mBtnChoice.setOnClickListener(this);
-        mImgConnected = findViewById(R.id.connectedImg);
-        mSentProgressBar = findViewById(R.id.fileTransferProgressBar);
-        mSentProgressBar.setMax(100);
+        buttonConnect = findViewById(R.id.connectButton);
+        buttonConnect.setOnClickListener(this);
+        buttonCancel = findViewById(R.id.cancel);
+        buttonCancel.setOnClickListener(this);
+        buttonChooseFile = findViewById(R.id.choiceFile);
+        buttonChooseFile.setOnClickListener(this);
+        imageConnection = findViewById(R.id.watchImage);
+        sentProgressBar = findViewById(R.id.fileTransferProgressBar);
+        sentProgressBar.setMax(100);
 
         initializeFT();
 
@@ -127,11 +123,10 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
     }
 
     public void onClick(View v) {
-        if (v.equals(mBtnCancel)) {
+        if (v.equals(buttonCancel)) {
             if (mIsBound) {
                 try {
                     mFTSender.cancelFileTransfer((int) currentTransId);
-                    mTransactions.remove(currentTransId);
                 } catch (IllegalArgumentException e) {
                     e.printStackTrace();
                     Toast.makeText(mContext, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
@@ -139,20 +134,13 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
             } else {
                 Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
             }
-        } else if (v.equals(mBtnCancelAll)) {
-            if (mFTSender != null) {
-                mFTSender.cancelAllTransactions();
-                mTransactions.clear();
-            } else {
-                Toast.makeText(mContext, R.string.no_binding, Toast.LENGTH_SHORT).show();
-            }
-        } else if (v.equals(mBtnConn)) {
+        } else if (v.equals(buttonConnect)) {
             if (mFTSender != null) {
                 mFTSender.connect();
             } else {
                 Toast.makeText(getApplicationContext(), R.string.not_bound, Toast.LENGTH_SHORT).show();
             }
-        } else if (v.equals(mBtnChoice)) {
+        } else if (v.equals(buttonChooseFile)) {
             Intent intent = new Intent(this, FilePickerActivity.class);
             startActivityForResult(intent, FILE_MANAGER_CODE);
 //            openFile();
@@ -170,35 +158,21 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
             if (path.equals("null")) {
                 return;
             }
-            mBtnCancel.setVisibility(View.VISIBLE);
-            mBtnCancelAll.setVisibility(View.VISIBLE);
-            mSentProgressBar.setVisibility(View.VISIBLE);
+            changeState(STATE_CONNECTED_SENDING);
 
             File file = new File(path);
             String mFileSize = Formatter.formatShortFileSize(mContext, file.length());
             Toast.makeText(mContext, getString(R.string.sending_file_toast, file.getName(), mFileSize), Toast.LENGTH_SHORT).show();
             if (mIsBound) {
                 try {
-                    int trId = mFTSender.sendFile(path);
-                    mTransactions.add((long) trId);
-                    currentTransId = trId;
+                    currentTransId = mFTSender.sendFile(path);
                 } catch (IllegalArgumentException e) {
                     e.printStackTrace();
                     Toast.makeText(mContext, R.string.ILLEGAL_ARGUMENT, Toast.LENGTH_SHORT).show();
                 }
             }
-        } else if (requestCode == CHANGE_STATE) {
-            if (resultCode == STATE_CONNECTED) {
-                mImgConnected.setVisibility(View.VISIBLE);
-                mBtnChoice.setVisibility(View.VISIBLE);
-            } else if (resultCode == STATE_DISCONNECTED) {
-                mImgConnected.setVisibility(View.INVISIBLE);
-                mBtnChoice.setVisibility(View.INVISIBLE);
-                mBtnCancel.setVisibility(View.GONE);
-                mBtnCancelAll.setVisibility(View.GONE);
-                mSentProgressBar.setVisibility(View.GONE);
-            }
-        }
+        } else if (requestCode == CHANGE_STATE)
+            changeState(resultCode);
     }
 
     private FileTransferSender.FileAction getFileAction() {
@@ -208,11 +182,23 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mSentProgressBar.setProgress(0);
-                        mTransactions.remove(currentTransId);
+                        sentProgressBar.setProgress(0);
                         currentTransId = -1;
                         Toast.makeText(getApplicationContext(), R.string.error, Toast.LENGTH_SHORT).show();
                         onActivityResult(CHANGE_STATE, STATE_DISCONNECTED, getIntent());
+                    }
+                });
+            }
+
+            @Override
+            public void onFileActionCancel() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sentProgressBar.setProgress(0);
+                        currentTransId = -1;
+                        Toast.makeText(getApplicationContext(), R.string.sending_cancelled, Toast.LENGTH_SHORT).show();
+                        changeState(STATE_CONNECTED);
                     }
                 });
             }
@@ -222,7 +208,7 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mSentProgressBar.setProgress((int) progress);
+                        sentProgressBar.setProgress((int) progress);
                     }
                 });
             }
@@ -232,10 +218,10 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mSentProgressBar.setProgress(0);
-                        mTransactions.remove(currentTransId);
+                        sentProgressBar.setProgress(0);
                         currentTransId = -1;
-                        Toast.makeText(getApplicationContext(), "Transfer Completed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.transfer_complete, Toast.LENGTH_SHORT).show();
+                        changeState(STATE_CONNECTED);
                     }
                 });
             }
@@ -245,28 +231,48 @@ public class FileTransferSenderActivity extends AppCompatActivity implements OnC
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mSentProgressBar.setProgress(0);
-                        mTransactions.remove(currentTransId);
+                        sentProgressBar.setProgress(0);
                         currentTransId = -1;
                     }
                 });
             }
+
         };
     }
 
-    public void changeState(boolean connected) {
-        if (connected) {
-            mImgConnected.setVisibility(View.VISIBLE);
-        } else {
-            mImgConnected.setVisibility(View.INVISIBLE);
+    public void changeState(int state) {
+        switch (state) {
+            case STATE_CONNECTED: {
+                imageConnection.setImageResource(R.drawable.ic_image_connected);
+                buttonChooseFile.setVisibility(View.VISIBLE);
+                buttonChooseFile.setEnabled(true);
+                buttonConnect.setVisibility(View.GONE);
+                buttonCancel.setVisibility(View.GONE);
+                sentProgressBar.setVisibility(View.GONE);
+                break;
+            }
+            case STATE_CONNECTED_SENDING: {
+                buttonCancel.setVisibility(View.VISIBLE);
+                sentProgressBar.setVisibility(View.VISIBLE);
+                buttonChooseFile.setEnabled(false);
+                break;
+            }
+            case STATE_DISCONNECTED: {
+                imageConnection.setImageResource(R.drawable.ic_image_not_connected);
+                buttonChooseFile.setVisibility(View.INVISIBLE);
+                buttonCancel.setVisibility(View.GONE);
+                sentProgressBar.setVisibility(View.GONE);
+                buttonConnect.setVisibility(View.VISIBLE);
+                break;
+            }
         }
     }
 
     private void initializeFT() {
         currentTransId = -1;
 
-        mSentProgressBar = (ProgressBar) findViewById(R.id.fileTransferProgressBar);
-        mSentProgressBar.setMax(100);
+        sentProgressBar = findViewById(R.id.fileTransferProgressBar);
+        sentProgressBar.setMax(100);
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(getApplicationContext(), " No SDCARD Present", Toast.LENGTH_SHORT).show();
